@@ -1,0 +1,4 @@
+run
+break (linenumber)
+step
+print (variablename)
