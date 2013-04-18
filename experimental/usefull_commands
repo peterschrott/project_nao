@@ -1,0 +1,5 @@
+../../NAO_tools/linux32-nao-atom-cross-toolchain-1.14/cross/bin/i686-aldebaran-linux-gnu-g++ helloworld.cpp main.cpp -L ../../NAO_tools/naoqi-sdk-1.14-linux32/lib/ -lalproxies -I ../../NAO_tools/naoqi-sdk-1.14-linux32/include/ -lalcommon -shared -o libtestHello.so
+
+ssh nao@192.168.0.111
+
+
