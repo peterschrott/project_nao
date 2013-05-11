@@ -39,7 +39,7 @@ void showImages() {
 	// Note MJPG can't be recorded with a framerate lower than 3 fps.
 	alvrp.setResolution(2);
 	alvrp.setFrameRate(10);
-	alvrp.setVideoFormat("ARV");
+	alvrp.setVideoFormat("MJPG");
 	alvrp.startRecording("/home/nao/recordings/cameras", "capture_01");
 	std::cerr << "   started recoding" << std::endl;
 	sleep(15);
