@@ -16,6 +16,9 @@
 #include <alcommon/albroker.h>
 #include <alcommon/albrokermanager.h>
 
+#include <alproxies/almotionproxy.h>
+#include <alproxies/alrobotpostureproxy.h>
+
 namespace AL
 {
   class ALBroker;

@@ -24,19 +24,39 @@ void ThreadTest::createThreads() {
 	pthread_create( &thread2, NULL, thread_function2, NULL );
 }
 
-void * ThreadTest::thread_function1(void*) { // Der Type ist wichtig: void* als Parameter und Rückgabe
+void * ThreadTest::thread_function1(void*) { // Der Type ist wichtig: void* als Parameter und R�ckgabe
+	std::string robotIp = "127.0.0.1";
+
+	ALMotionProxy motion(robotIp);
+	ALRobotPostureProxy robotPosture(robotIp);
+
+	robotPosture.goToPosture("StandInit", 0.5f);
+
 	int i = 0;
-	for(;i < 20;i++) {
-		std::cerr << "Thread 1" << std::endl;
-		sleep(1);
+	while(i < 10) {
+		// Example showing the moveTo command
+		// as length of path is less than 0.4m
+		// the path will be an SE3 interpolation
+		// The units for this command are meters and radians
+		float x  = 0.2f;
+		float y  = 0.2f;
+		// pi/2 anti-clockwise (90 degrees)
+		float theta = 0.0f;
+		motion.moveTo(x, y, theta);
+		
+		x  = -0.2f;
+		y  = -0.2f;
+		motion.moveTo(x, y, theta);
+		
+		// count the number of movements
+		i++;
 	}
- 
-  return 0; 
+	return 0; 
 } 
 
 void * ThreadTest::thread_function2(void*) { // Der Type ist wichtig: void* als Parameter und Rückgabe
 	int i = 0;
-	for(;i < 20;i++) {
+	for(;i < 12;i++) {
 		std::cerr << "Thread 2" << std::endl;
 		sleep(2);
 	}
