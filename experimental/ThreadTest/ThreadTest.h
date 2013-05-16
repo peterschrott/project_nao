@@ -7,15 +7,17 @@
 
 #include <iostream>
 #include <string>
-#include <pthread.h>
+//#include <pthread.h>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h>
+#include <boost/thread.hpp>
 
 #include <alvalue/alvalue.h>
 #include <alcommon/almodule.h>
 #include <alcommon/albroker.h>
 #include <alcommon/albrokermanager.h>
 
+#include <alproxies/alvideorecorderproxy.h>
 #include <alproxies/almotionproxy.h>
 #include <alproxies/alrobotpostureproxy.h>
 
@@ -43,8 +45,8 @@ class ThreadTest : public AL::ALModule
 
 private:
 
-	static void* thread_function1(void *);
-	static void* thread_function2(void *);
+	static void thread_function1(void);
+	static void thread_function2(void);
 
 };
 
