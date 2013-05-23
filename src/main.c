@@ -5,7 +5,7 @@
 #include "shapes.h"
 
 #include <boost/thread.hpp>
-#include <alcommon/almodule.h>
+
 
 
 
@@ -37,6 +37,8 @@ int main( void )
 
 #else
 
+#include <alcommon/albroker.h>
+#include <alcommon/almodule.h>
 
 namespace AL
 {
@@ -67,8 +69,7 @@ class Prog : public AL::ALModule
 };
 
 
-Prog::Prog(boost::shared_ptr<ALBroker> broker, const std::string& name):
-  ALModule(broker, name)
+Prog::Prog(boost::shared_ptr<AL::ALBroker> broker, const std::string& name):  ALModule(broker, name)
 {
 	// TODO: here there will be everything the Nao needs to display infos about this module
 }

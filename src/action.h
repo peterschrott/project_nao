@@ -5,11 +5,11 @@
 
 
 
-typedef struct event {
+typedef struct naoEvent {
 	int id; // what kind of event happened
 	char *name; // string representation of event (for logging ...)
 	int *data; // could be used to handle data like position of a recognized sound
-}
+};
 
 
 #ifdef PC
@@ -26,6 +26,6 @@ typedef struct event {
 #endif
 
 // this function only needs to be implemented on nao
-void handleEvent( event e );
+void handleEvent( naoEvent e );
 
 #endif
