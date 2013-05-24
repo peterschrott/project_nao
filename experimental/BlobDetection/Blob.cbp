@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Blob" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Blob" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="cvBlobsLib/src" />
+				</Compiler>
+				<Linker>
+					<Add option="-Lopencv" />
+					<Add option="-lopencv_highgui" />
+					<Add option="-lopencv_core" />
+					<Add option="-lopencv_imgproc" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Blob" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="DetectSkinBlobs.cpp" />
+		<Unit filename="cvBlobsLib/src/BlobContour.cpp" />
+		<Unit filename="cvBlobsLib/src/BlobContour.h" />
+		<Unit filename="cvBlobsLib/src/BlobLibraryConfiguration.h" />
+		<Unit filename="cvBlobsLib/src/BlobOperators.cpp" />
+		<Unit filename="cvBlobsLib/src/BlobOperators.h" />
+		<Unit filename="cvBlobsLib/src/BlobProperties.h" />
+		<Unit filename="cvBlobsLib/src/BlobResult.cpp" />
+		<Unit filename="cvBlobsLib/src/BlobResult.h" />
+		<Unit filename="cvBlobsLib/src/ComponentLabeling.cpp" />
+		<Unit filename="cvBlobsLib/src/ComponentLabeling.h" />
+		<Unit filename="cvBlobsLib/src/Doxyfile" />
+		<Unit filename="cvBlobsLib/src/HOWTO_build_cvblobslib.txt" />
+		<Unit filename="cvBlobsLib/src/blob.cpp" />
+		<Unit filename="cvBlobsLib/src/blob.h" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.dsp" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.dsw" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.opt" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.plg" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.sln" />
+		<Unit filename="cvBlobsLib/src/cvblobslib.vcproj" />
+		<Unit filename="cvBlobsLib/src/example.txt" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

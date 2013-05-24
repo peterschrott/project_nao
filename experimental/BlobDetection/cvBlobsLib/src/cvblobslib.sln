@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cvblobslib", "cvblobslib.vcproj", "{1AA2CCA9-DA27-40B5-BF1C-6D1132877377}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testBlobs", "testBlobs\testBlobs.vcproj", "{2AE23DA6-359E-4209-BAB3-1660CDD27274}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AA2CCA9-DA27-40B5-BF1C-6D1132877377}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1AA2CCA9-DA27-40B5-BF1C-6D1132877377}.Debug|Win32.Build.0 = Debug|Win32
+		{1AA2CCA9-DA27-40B5-BF1C-6D1132877377}.Release|Win32.ActiveCfg = Release|Win32
+		{1AA2CCA9-DA27-40B5-BF1C-6D1132877377}.Release|Win32.Build.0 = Release|Win32
+		{2AE23DA6-359E-4209-BAB3-1660CDD27274}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2AE23DA6-359E-4209-BAB3-1660CDD27274}.Debug|Win32.Build.0 = Debug|Win32
+		{2AE23DA6-359E-4209-BAB3-1660CDD27274}.Release|Win32.ActiveCfg = Release|Win32
+		{2AE23DA6-359E-4209-BAB3-1660CDD27274}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
