@@ -1,0 +1,2 @@
+cvBlobsLib downloaded from:
+"http://opencv.willowgarage.com/wiki/cvBlobsLib"
