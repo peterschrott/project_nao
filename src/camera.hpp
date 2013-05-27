@@ -2,20 +2,21 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <opencv2/core/core.hpp>
 
 // allgemeine includes
 
 #ifdef PC
 // aldebaran includes
-
 #define GET_CAMERA_IMAGE getOpenCvImage();
-#else
 
+#else
 // opencv includes
 #define GET_CAMERA_IMAGE getNaoImage();
 #endif
 
-Mat getOpenCvImage();
-Mat getNaoImage();
+cv::Mat getOpenCvImage();
+cv::Mat getNaoImage();
+bool unsubscribe() ;
 
 #endif

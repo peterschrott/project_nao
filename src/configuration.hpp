@@ -7,7 +7,7 @@
 
 
 
-#ifdef IS_REMOTE
+#ifdef PROG_IS_REMOTE
 	#define PC
 #endif
 
