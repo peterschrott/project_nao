@@ -7,7 +7,7 @@ project(capturevideo)
 find_package(qibuild)
 
 
-# Here, we create an executable named "getimages" from the cpp file.
+# Here, we create an executable named "capturevideo" from the cpp file.
 qi_create_bin(capturevideo capturevideo.cpp)
 
 # Here we say that our executable depends on
