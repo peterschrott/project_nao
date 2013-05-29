@@ -6,7 +6,7 @@
 // Aldebaran includes
 #include <alproxies/alvideodeviceproxy.h>
 #include <alvision/alvisiondefinitions.h>
-#include <alvalue/alvalue.h>
+#include <alvision/alimage.h>
 
 // Include cvBlob
 #include "cvblob/BlobResult.h"
@@ -31,7 +31,7 @@ void BlobDetection::init() {
 		//OLD: CvCapture* capture = cvCreateFileCapture( "/home/peter/nao/workspace/repo/project_nao/experimental/BlobDetection/recording_01.avi");
 
 		/** Create a proxy to ALVideoDevice on the robot.*/
-		ALVideoDeviceProxy *camProxy = new ALVideoDeviceProxy("nao.local", 9559);
+		ALVideoDeviceProxy *camProxy = new ALVideoDeviceProxy(getParentBroker());
 		/** Subscribe a client image requiring 640*480px and RGB colorspace.*/
 		const std::string clientName = camProxy->subscribeCamera("camera_01", 1, AL::kVGA, AL::kRGBColorSpace, 10);
 		
@@ -49,12 +49,14 @@ void BlobDetection::init() {
 			//}
 			//cvShowImage("Input Image", imageBGR);
 			
-			ALValue rgbImg = camProxy->getImageLocal(clientName);
+			ALImage *rgbImg = (ALImage*)camProxy->getImageLocal(clientName);
 
 			/** Access the image buffer (6th field) and assign it to the opencv image container. */
 			/** Create an Mat header to wrap into an opencv image.*/
-			Mat naoImg = Mat(Size(rgbImg[0], rgbImg[1]), CV_8UC3);
-			naoImg.data = (uchar*) rgbImg[6].GetBinary();
+			Mat naoImg = Mat(Size(rgbImg->getWidth(), rgbImg->getHeight()), CV_8UC3);
+			naoImg.data = (uchar*) rgbImg->getData();
+			
+			camProxy->releaseImage(clientName);
 			
 			// OLD: Convert the image to HSV colors.
 			//IplImage *imageHSV = cvCreateImage( cvGetSize(imageBGR), 8, 3);	// Full HSV color image.
@@ -237,6 +239,8 @@ void BlobDetection::init() {
 			//if ESC is pressed then exit loop
 			//cvWaitKey(33);
 		}
+		
+		camProxy->unsubscribe(clientName);
 		//cvWaitKey(0);
 		
 	} catch (const AL::ALError& e) {
