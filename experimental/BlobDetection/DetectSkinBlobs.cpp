@@ -5,8 +5,11 @@
 #include <iostream>
 
 // Include OpenCV
-#include "opencv/cv.h"
-#include "opencv/highgui.h"
+// opencv includes
+#include <opencv2/core/core.hpp>
+// opencv includes
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 
 // Include cvBlobsLib
@@ -89,42 +92,47 @@ int main(int argc, char *argv[])
 	cvNamedWindow("Skin Blobs", CV_WINDOW_AUTOSIZE);
 
     while(1){
-        IplImage *imageBGR =  cvQueryFrame(capture);
-        if(!imageBGR)break;
-        cvShowImage("Input Image", imageBGR);
+        Mat imageBGR =  cvQueryFrame(capture);
+        if(imageBGR.empty())break;
+        imshow("Input Image", imageBGR);
 
         // Convert the image to HSV colors.
-        IplImage *imageHSV = cvCreateImage( cvGetSize(imageBGR), 8, 3);	// Full HSV color image.
-        cvCvtColor(imageBGR, imageHSV, CV_BGR2HSV);				// Convert from a BGR to an HSV image.
+        Mat imageHSV = Mat(imageBGR.size(), CV_8UC3);	// Full HSV color image.
+        cvtColor(imageBGR, imageHSV, CV_BGR2HSV);				// Convert from a BGR to an HSV image.
 
-        // Get the separate HSV color components of the color input image.
-        IplImage* planeH = cvCreateImage( cvGetSize(imageBGR), 8, 1);	// Hue component.
-        IplImage* planeS = cvCreateImage( cvGetSize(imageBGR), 8, 1);	// Saturation component.
-        IplImage* planeV = cvCreateImage( cvGetSize(imageBGR), 8, 1);	// Brightness component.
-        cvCvtPixToPlane(imageHSV, planeH, planeS, planeV, 0);	// Extract the 3 color components.
+
+
+        std::vector<Mat> channels(3);
+        split(imageHSV, channels);
+
+        Mat planeH = channels[0];
+        Mat planeS = channels[1];
+        Mat planeV = channels[2];
 
 
         // Detect which pixels in each of the H, S and V channels are probably skin pixels.
-        cvThreshold(planeH, planeH, 150, UCHAR_MAX, CV_THRESH_BINARY_INV);//18
-        cvThreshold(planeS, planeS, 60, UCHAR_MAX, CV_THRESH_BINARY);//50
-        cvThreshold(planeV, planeV, 170, UCHAR_MAX, CV_THRESH_BINARY);//80
+        threshold(planeH, planeH, 150, UCHAR_MAX, CV_THRESH_BINARY_INV);//18
+        threshold(planeS, planeS, 60, UCHAR_MAX, CV_THRESH_BINARY);//50
+        threshold(planeV, planeV, 170, UCHAR_MAX, CV_THRESH_BINARY);//80
 
 
         // Combine all 3 thresholded color components, so that an output pixel will only
         // be white if the H, S and V pixels were also white.
-        IplImage* imageSkinPixels = cvCreateImage( cvGetSize(imageBGR), 8, 1);	// Greyscale output image.
-        cvAnd(planeH, planeS, imageSkinPixels);				// imageSkin = H {BITWISE_AND} S.
-        cvAnd(imageSkinPixels, planeV, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
+        Mat imageSkinPixels = Mat( imageBGR.size(), CV_8UC3);	// Greyscale output image.
+        bitwise_and(planeH, planeS, imageSkinPixels);				// imageSkin = H {BITWISE_AND} S.
+        bitwise_and(imageSkinPixels, planeV, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
 
         // Show the output image on the screen.
 
-        cvShowImage("Skin Pixels", imageSkinPixels);
+        imshow("Skin Pixels", imageSkinPixels);
 
+
+        IplImage ipl_imageSkinPixels = imageSkinPixels;
 
         // Find blobs in the image.
         CBlobResult blobs;
 
-        blobs = CBlobResult(imageSkinPixels, NULL, 0);	// Use a black background color.
+        blobs = CBlobResult(&ipl_imageSkinPixels, NULL, 0);	// Use a black background color.
 
         // Ignore the blobs whose area is less than minArea.
 
@@ -133,7 +141,7 @@ int main(int argc, char *argv[])
         srand (time(NULL));
 
         // Show the large blobs.
-        IplImage* imageSkinBlobs = cvCreateImage( cvGetSize(imageBGR), 8, 3);	//Colored Output//,1); Greyscale output image.
+        IplImage* imageSkinBlobs = cvCreateImage(imageBGR.size(), 8, 3);	//Colored Output//,1); Greyscale output image.
         for (int i = 0; i < blobs.GetNumBlobs(); i++) {
             CBlob *currentBlob = blobs.GetBlob(i);
             currentBlob->FillBlob(imageSkinBlobs, CV_RGB(rand()%255,rand()%255,rand()%255));	// Draw the large blobs as white.
@@ -150,7 +158,7 @@ int main(int argc, char *argv[])
 
         //Gestures
 
-        //std::cout << "Number of Blobs: "<< blobs.GetNumBlobs() <<endl;
+        std::cout << "Number of Blobs: "<< blobs.GetNumBlobs() <<endl;
 
 
 
