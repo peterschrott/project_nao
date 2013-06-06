@@ -28,60 +28,21 @@ BlobDetection::BlobDetection(boost::shared_ptr<ALBroker> broker, const std::stri
 	//BIND_METHOD(ThreadTest::createThreads);
 }
 
-inline char klip( int val )
-{
-  if( val > 255 ) return (unsigned char)255;
-  if( val < 0 )   return (unsigned char)0;
-  return (unsigned char) val;
-}
-
-void convertYUV422ToBGR(int _width, int _height, int _nScaleFactor,
-                        const unsigned char* _imageDataIn,
-                        unsigned char* _imageDataOut)
-{
-  // integer implementation (4.9 times faster) - PEV
-  unsigned char * ptuc_imageDataOut = (unsigned char *)_imageDataOut;
-  const unsigned char * ptuc_imageDataIn = (const unsigned char *)_imageDataIn;
-
-  int widthMax = _width*2*_nScaleFactor;
-  int widthStep= 4*_nScaleFactor;
-  for(int j=0; j < _height; j++)
-  { for(int i=0; i < widthMax; i+=widthStep)
-    { int C = ptuc_imageDataIn[i  ] - 16;
-      int D = ptuc_imageDataIn[i+1] - 128;
-      int C2= ptuc_imageDataIn[i+2] - 16;
-      int E = ptuc_imageDataIn[i+3] - 128;
-
-      register int valC1 = 298 * C;
-      register int valC2 = 298 * C2;
-      register int valB  = 517 * D;
-      register int valG  = - 208 * D - 100 * E;
-      register int valR  = 409 * E;
-
-      *ptuc_imageDataOut++ = klip(( valC1 + valB ) >> 8);
-      *ptuc_imageDataOut++ = klip(( valC1 + valG ) >> 8);
-      *ptuc_imageDataOut++ = klip(( valC1 + valR ) >> 8);
-      *ptuc_imageDataOut++ = klip(( valC2 + valB ) >> 8);
-      *ptuc_imageDataOut++ = klip(( valC2 + valG ) >> 8);
-      *ptuc_imageDataOut++ = klip(( valC2 + valR ) >> 8);
-    }
-    ptuc_imageDataIn += widthMax*_nScaleFactor;
-  }
-}
-
 void BlobDetection::init() {
 	/** Init is called just after construction.   */
 	try {
-		/** Create a proxy to ALVideoDevice on the robot.*/
+		// Create a proxy to ALVideoDevice on the robot.
 		ALVideoDeviceProxy *camProxy = new ALVideoDeviceProxy(getParentBroker());
-		/** Subscribe a client image requiring 640*480px and RGB colorspace.*/
-		const std::string clientName = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
+		// Subscribe a client image requiring 640*480px and RGB colorspace.
+		const std::string cameraID = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
 
-		handOrientation rightOrientationLast = NONE, leftOrientationLast = NONE;
+		handOrientation rightOrientationLast = NONE;
+		handOrientation leftOrientationLast = NONE;
 		handOrientation rightOrientationCur = NONE, leftOrientationCur = NONE;
 
-		// prepare vido recording
-		long long timestamp = 0;
+		// RECODING: prepare vido recording
+		/*
+		int size;
 		std::string arvFile = std::string("/home/nao/video");
 
 		streamHeader tmpStreamHeader;
@@ -90,9 +51,8 @@ void BlobDetection::init() {
 
 		tmpStreamHeader.width      = 640;
 		tmpStreamHeader.height     = 480;
-		tmpStreamHeader.colorSpace = AL::kRGBColorSpace;
+		tmpStreamHeader.colorSpace = AL::kRGBColorSpace; // this is not really necessary, coz in pyuv u decide in which colorspace the vid is shown
 		tmpStreamHeader.pixelDepth = 8;
-
 		streamHeaderVector.push_back(tmpStreamHeader);
 
 		std::cout<<"Output arv file properties: "<< streamHeaderVector[0].width <<"x"<< streamHeaderVector[0].height
@@ -103,29 +63,27 @@ void BlobDetection::init() {
 			std::cout<<"Error writing "<< arvFile <<" file."<<std::endl;
 			return;
 		}
-
-		int size;
+		*/
 
 		int j = 0;
 		while(1) {
-			ALImage *img_cam = (ALImage*)camProxy->getImageLocal(clientName);
-            size = img_cam->getSize();
-            // record vid direct from cam
-			//videoFile.write((char*) img_cam->getData(), img_cam->getSize()); //video ging hier
+		    // Fetch the image from the nao camera, we subscribed on. Its in RGB colorspace
+			ALImage *img_cam = (ALImage*)camProxy->getImageLocal(cameraID);
+            // RECODING: store the size (in memory meaning) of the image for recording purpouse
+            // size = img_cam->getSize();
+            // RECORDING: record vid direct from cam (RGB)
+			// videoFile.write((char*) img_cam->getData(), size); //video ging hier
 
-			/** Access the image buffer (6th field) and assign it to the opencv image container. */
-			/** Create an Mat header to wrap into an opencv image.*/
+			// Create an openCv Mat header to convert the aldebaran AlImage image.
+			// To convert the aldebaran image only the data are of it are assigned to the openCv image.
 			Mat img_hsv = Mat(Size(img_cam->getWidth(), img_cam->getHeight()), CV_8UC3);
-
-            // conversion from yuv to brg
-			//convertYUV422ToBGR(img_cam->getWidth(), img_cam->getHeight(), 1, img_cam->getData(), img_hsv.data);
 			img_hsv.data = (uchar*) img_cam->getData();
 
-			// Convert the image to HSV colors.
+			// Convert the RGB image from the camera to an HSV image */
 			cvtColor(img_hsv, img_hsv, CV_RGB2HSV);
 
-			// record converted to hsv vid
-			//videoFile.write((char*) img_hsv.data, img_cam->getSize()); //video ging hier
+			// RECORDING: record converted to hsv video
+			//videoFile.write((char*) img_hsv.data, size); //video ging hier
 
 			// Get the separate HSV color components of the color input image.
             std::vector<Mat> channels(3);
@@ -142,19 +100,20 @@ void BlobDetection::init() {
 
             // Combine all 3 thresholded color components, so that an output pixel will only
             // be white if the H, S and V pixels were also white.
-            Mat imageSkinPixels = Mat(img_hsv.size(), CV_8UC3);	// Greyscale output image.
+            Mat imageSkinPixels = Mat(img_hsv.size(), CV_8UC3);	        // Greyscale output image.
             bitwise_and(planeH, planeS, imageSkinPixels);				// imageSkin = H {BITWISE_AND} S.
-            bitwise_and(imageSkinPixels, planeV, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
+            bitwise_and(imageSkinPixels, planeV, imageSkinPixels);	    // imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
 
+            // RECORDING: record the converted image (its only a third size of the orgin image, coz the colorcomponents are combined)
 			//videoFile.write((char*) imageSkinPixels.data, size/3); //läuft!!
 
-			// Find blobs in the image.
+			// Assing the Mat (C++) to an IplImage (C), this is necessary because the blob detection is writtn in old opnCv C version
 			IplImage ipl_imageSkinPixels = imageSkinPixels;
-			//IplImage* ipl_imageSkinPixels = cvCreateImage(imageSkinPixels.size(), 8, 1);
-			//ipl_imageSkinPixels->imageData = (char *) imageSkinPixels.data;
 
-			//videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3); //läuft
+            // RECODING: record the video using the C container variable
+			//videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3)
 
+            // Set up the blob detection.
 			CBlobResult blobs;
 			blobs.ClearBlobs();
 			blobs = CBlobResult(&ipl_imageSkinPixels, NULL, 0);	// Use a black background color.
@@ -180,19 +139,24 @@ void BlobDetection::init() {
 
 				//Detect Head and Hand indexes
 				if(blobs.GetNumBlobs() == 2){
+				    // head and one hand
 					int indexHand = -1;
 					if(getCenterPoint(rect[0]).y < getCenterPoint(rect[1]).y){
+					    // rect[0] is head
 						indexHead = 0;
 						indexHand = 1;
 					}else{
+					    // rect[1] is head
 						indexHead = 1;
 						indexHand = 0;
 					}
 
 					if(getHandside(rect[indexHead], rect[indexHand]) == LEFT){
+					    // hand is left
 						indexHandLeft = 1;
 						indexHandRight = -1;
 					}else{
+					    // hand ist right
 						indexHandLeft = -1;
 						indexHandRight = 1;
 					}
@@ -202,14 +166,17 @@ void BlobDetection::init() {
 					int indexHand1 = -1;
 					int indexHand2 = -1;
 					if(getCenterPoint(rect[0]).y < getCenterPoint(rect[1]).y && getCenterPoint(rect[0]).y < getCenterPoint(rect[2]).y){
+					    // rect[0] is head
 						indexHead = 0;
 						indexHand1 = 1;
 						indexHand2 = 2;
 					}else if(getCenterPoint(rect[1]).y < getCenterPoint(rect[0]).y && getCenterPoint(rect[1]).y < getCenterPoint(rect[2]).y){
+						// rect[1] is head
 						indexHead = 1;
 						indexHand1 = 0;
 						indexHand2 = 2;
 					}else{
+					    // rect[2] is head
 						indexHead = 2;
 						indexHand1 = 0;
 						indexHand2 = 1;
@@ -264,17 +231,15 @@ void BlobDetection::init() {
 			rightOrientationLast = rightOrientationCur;
 
 			// Free all the resources.
-			camProxy->releaseImage(clientName);
+			camProxy->releaseImage(cameraID);
 
-			//IplImage* ptr = &ipl_imageSkinPixels;
-			//cvReleaseImage(&ptr);
-
-			sleep(1);
+			//sleep(1);
 		}
 
-		videoFile.closeVideo();
+        // RECODING: close the video recorder
+		//videoFile.closeVideo();
 
-		camProxy->unsubscribe(clientName);
+		camProxy->unsubscribe(cameraID);
 
 	} catch (const AL::ALError& e) {
 		std::cerr << "Caught exception: " << e.what() << std::endl;
