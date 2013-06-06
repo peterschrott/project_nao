@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 {
 
 
-    CvCapture* capture = cvCreateFileCapture( "recording_01.avi");
+    CvCapture* capture = cvCreateFileCapture( "recording_03.avi");
 
 
 

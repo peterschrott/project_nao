@@ -75,81 +75,89 @@ void BlobDetection::init() {
 		/** Create a proxy to ALVideoDevice on the robot.*/
 		ALVideoDeviceProxy *camProxy = new ALVideoDeviceProxy(getParentBroker());
 		/** Subscribe a client image requiring 640*480px and RGB colorspace.*/
-		const std::string clientName = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10); //AL::kBGRColorSpace
+		const std::string clientName = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
 
 		handOrientation rightOrientationLast = NONE, leftOrientationLast = NONE;
 		handOrientation rightOrientationCur = NONE, leftOrientationCur = NONE;
 
 		// prepare vido recording
 		long long timestamp = 0;
-	    std::string arvFile = std::string("/home/nao/video");
+		std::string arvFile = std::string("/home/nao/video");
 
-        streamHeader tmpStreamHeader;
-        std::vector<streamHeader> streamHeaderVector;
-        ALVideo videoFile;
+		streamHeader tmpStreamHeader;
+		std::vector<streamHeader> streamHeaderVector;
+		ALVideo videoFile;
 
-        tmpStreamHeader.width      = 640;
-        tmpStreamHeader.height     = 480;
-        tmpStreamHeader.colorSpace = AL::kRGBColorSpace;
-        tmpStreamHeader.pixelDepth = 8;
+		tmpStreamHeader.width      = 640;
+		tmpStreamHeader.height     = 480;
+		tmpStreamHeader.colorSpace = AL::kRGBColorSpace;
+		tmpStreamHeader.pixelDepth = 8;
 
-        streamHeaderVector.push_back(tmpStreamHeader);
+		streamHeaderVector.push_back(tmpStreamHeader);
 
-        std::cout<<"Output arv file properties: "<< streamHeaderVector[0].width <<"x"<< streamHeaderVector[0].height
-          <<" Colorspace id:"<< streamHeaderVector[0].colorSpace <<" Pixel depth:"<< streamHeaderVector[0].pixelDepth
-          <<std::endl;
+		std::cout<<"Output arv file properties: "<< streamHeaderVector[0].width <<"x"<< streamHeaderVector[0].height
+		  <<" Colorspace id:"<< streamHeaderVector[0].colorSpace <<" Pixel depth:"<< streamHeaderVector[0].pixelDepth
+		  <<std::endl;
 
-        if( !videoFile.recordVideo( arvFile, 0, streamHeaderVector ) ) {
-            std::cout<<"Error writing "<< arvFile <<" file."<<std::endl;
-            return;
-        }
+		if( !videoFile.recordVideo( arvFile, 0, streamHeaderVector ) ) {
+			std::cout<<"Error writing "<< arvFile <<" file."<<std::endl;
+			return;
+		}
 
-        int j = 0;
-		while(j++ < 30) {
-			ALImage *camImg = (ALImage*)camProxy->getImageLocal(clientName);
+		int size;
 
-            timestamp += 66000;
+		int j = 0;
+		while(1) {
+			ALImage *img_cam = (ALImage*)camProxy->getImageLocal(clientName);
+            size = img_cam->getSize();
+            // record vid direct from cam
+			//videoFile.write((char*) img_cam->getData(), img_cam->getSize()); //video ging hier
 
 			/** Access the image buffer (6th field) and assign it to the opencv image container. */
 			/** Create an Mat header to wrap into an opencv image.*/
-			Mat naoImg = Mat(Size(camImg->getWidth(), camImg->getHeight()), CV_8UC3);
+			Mat img_hsv = Mat(Size(img_cam->getWidth(), img_cam->getHeight()), CV_8UC3);
 
-			//convertYUV422ToBGR(camImg->getWidth(), camImg->getHeight(), 1, camImg->getData(), naoImg.data);
-			//naoImg.data = (uchar*) camImg->getData();
+            // conversion from yuv to brg
+			//convertYUV422ToBGR(img_cam->getWidth(), img_cam->getHeight(), 1, img_cam->getData(), img_hsv.data);
+			img_hsv.data = (uchar*) img_cam->getData();
 
 			// Convert the image to HSV colors.
-			cvtColor(naoImg, naoImg, CV_RGB2HSV);
+			cvtColor(img_hsv, img_hsv, CV_RGB2HSV);
+
+			// record converted to hsv vid
+			//videoFile.write((char*) img_hsv.data, img_cam->getSize()); //video ging hier
 
 			// Get the separate HSV color components of the color input image.
-			std::vector<Mat> channels(3);
-			split(naoImg, channels);
+            std::vector<Mat> channels(3);
+            split(img_hsv, channels);
 
-			Mat planeH = channels[0];
-			Mat planeS = channels[1];
-			Mat planeV = channels[2];
+            Mat planeH = channels[0];
+            Mat planeS = channels[1];
+            Mat planeV = channels[2];
 
-			// Detect which pixels in each of the H, S and V channels are probably skin pixels.
-			threshold(planeH, planeH, 150, UCHAR_MAX, CV_THRESH_BINARY_INV);
-			threshold(planeS, planeS, 60, UCHAR_MAX, CV_THRESH_BINARY);
-			threshold(planeV, planeV, 170, UCHAR_MAX, CV_THRESH_BINARY);
+            // Detect which pixels in each of the H, S and V channels are probably skin pixels.
+            threshold(planeH, planeH, 150, UCHAR_MAX, CV_THRESH_BINARY_INV);//18
+            threshold(planeS, planeS, 60, UCHAR_MAX, CV_THRESH_BINARY);//50
+            threshold(planeV, planeV, 170, UCHAR_MAX, CV_THRESH_BINARY);//80
 
-			// Combine all 3 thresholded color components, so that an output pixel will only
-			// be white if the H, S and V pixels were also white.
-			Mat imageSkinPixels(naoImg.size(), CV_8UC1);
-			bitwise_and(planeH, planeS, imageSkinPixels);
-			bitwise_and(imageSkinPixels, planeV, imageSkinPixels);
+            // Combine all 3 thresholded color components, so that an output pixel will only
+            // be white if the H, S and V pixels were also white.
+            Mat imageSkinPixels = Mat(img_hsv.size(), CV_8UC3);	// Greyscale output image.
+            bitwise_and(planeH, planeS, imageSkinPixels);				// imageSkin = H {BITWISE_AND} S.
+            bitwise_and(imageSkinPixels, planeV, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
+
+			//videoFile.write((char*) imageSkinPixels.data, size/3); //läuft!!
 
 			// Find blobs in the image.
-			IplImage* ipl_imageSkinPixels = cvCreateImage(imageSkinPixels.size(), 8, 1);
-			ipl_imageSkinPixels->imageData = (char *) imageSkinPixels.data;
-			//IplImage ipl_imageSkinPixels = imageSkinPixels;
+			IplImage ipl_imageSkinPixels = imageSkinPixels;
+			//IplImage* ipl_imageSkinPixels = cvCreateImage(imageSkinPixels.size(), 8, 1);
+			//ipl_imageSkinPixels->imageData = (char *) imageSkinPixels.data;
 
-            videoFile.write((char*) ipl_imageSkinPixels->imageData, ipl_imageSkinPixels->imageSize);
-
+			//videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3); //läuft
 
 			CBlobResult blobs;
 			blobs.ClearBlobs();
-			blobs = CBlobResult(ipl_imageSkinPixels, NULL, 0);	// Use a black background color.
+			blobs = CBlobResult(&ipl_imageSkinPixels, NULL, 0);	// Use a black background color.
 
 			// Ignore the blobs whose area is less than minArea.
 			blobs.Filter(blobs, B_EXCLUDE, CBlobGetArea(), B_LESS, minBlobArea);
@@ -258,7 +266,8 @@ void BlobDetection::init() {
 			// Free all the resources.
 			camProxy->releaseImage(clientName);
 
-			cvReleaseImage(&ipl_imageSkinPixels);
+			//IplImage* ptr = &ipl_imageSkinPixels;
+			//cvReleaseImage(&ptr);
 
 			sleep(1);
 		}
