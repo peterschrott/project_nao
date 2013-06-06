@@ -107,7 +107,7 @@ void BlobDetection::init() {
 		int size;
 
 		int j = 0;
-		while(j++ < 10) {
+		while(1) {
 			ALImage *img_cam = (ALImage*)camProxy->getImageLocal(clientName);
             size = img_cam->getSize();
             // record vid direct from cam
@@ -152,9 +152,8 @@ void BlobDetection::init() {
 			IplImage ipl_imageSkinPixels = imageSkinPixels;
 			//IplImage* ipl_imageSkinPixels = cvCreateImage(imageSkinPixels.size(), 8, 1);
 			//ipl_imageSkinPixels->imageData = (char *) imageSkinPixels.data;
-			//IplImage ipl_imageSkinPixels = imageSkinPixels;
 
-			// videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3); //läuft
+			//videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3); //läuft
 
 			CBlobResult blobs;
 			blobs.ClearBlobs();
