@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6.4 FATAL_ERROR)
-project(BlobDetectionNao)
+project(BlobDetection)
 # this lets you find the qibuild cmake framework
 find_package(qibuild)
 
