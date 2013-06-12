@@ -37,7 +37,8 @@ class BlobDetection : public AL::ALModule {
 
 		virtual void init();
 	private:
-	
+        void onFrontTactilTouched();
+        void onMiddleTactilTouched();
 		int handleGestures(gestures doGesture);
 		handOrientationChange detectHandStateChange(handOrientation last, handOrientation current);
 		handside getHandside(cv::Rect head, cv::Rect hand);
