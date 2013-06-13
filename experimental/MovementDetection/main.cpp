@@ -79,33 +79,32 @@ void filter_and_threshold(struct ctx *ctx)
 {
 
     /* Soften image */
-    cvSmooth(ctx->image, ctx->temp_image3, CV_GAUSSIAN, 11, 11, 0, 0);
+    //cvSmooth(ctx->image, ctx->temp_image3, CV_GAUSSIAN, 11, 11, 0, 0);
 
 
 
 
     /* Remove some impulsive noise */
-    cvSmooth(ctx->temp_image3, ctx->temp_image3, CV_MEDIAN, 11, 11, 0, 0);
+    //cvSmooth(ctx->temp_image3, ctx->temp_image3, CV_MEDIAN, 11, 11, 0, 0);
 
 
 
-    cvCvtColor(ctx->temp_image3, ctx->temp_image3, CV_BGR2HSV);
+    //cvCvtColor(ctx->temp_image3, ctx->temp_image3, CV_BGR2HSV);
 
 
     /*
     * Apply threshold on HSV values
     * Threshold values should be customized according to environment
     */
-//cvInRangeS(ctx->temp_image3,cvScalar(0, 0, 160, 0),cvScalar(255, 400, 300, 255),ctx->thr_image);
-    cvInRangeS(ctx->temp_image3,cvScalar(0, 0, 160, 0),cvScalar(255, 400, 300, 255),ctx->thr_image);
+    //cvInRangeS(ctx->temp_image3,cvScalar(0, 0, 160, 0),cvScalar(255, 400, 300, 255),ctx->thr_image);
 
 
 
 
 
     /* Apply morphological opening */
-    cvMorphologyEx(ctx->thr_image, ctx->thr_image, NULL, ctx->kernel,CV_MOP_OPEN, 1);
-    cvSmooth(ctx->thr_image, ctx->thr_image, CV_GAUSSIAN, 3, 3, 0, 0);
+    //cvMorphologyEx(ctx->thr_image, ctx->thr_image, NULL, ctx->kernel,CV_MOP_OPEN, 1);
+    //cvSmooth(ctx->thr_image, ctx->thr_image, CV_GAUSSIAN, 3, 3, 0, 0);
 
 
 
@@ -296,13 +295,24 @@ void display(struct ctx *ctx)
     IplImage *dst;
     if ( oldimage != NULL ) {
         dst = cvCloneImage(ctx->image);
+
         cvSub(ctx->image,oldimage,dst,NULL);
+
         cvShowImage("thresholded", dst);
+
+        cvAddWeighted(oldimage, 0.25, ctx->image, 0.75, 0.0, oldimage);
+
+
+        cvReleaseImage(&dst);
+        //cvReleaseImage(&oldimage);
+
+
     }
     else {
         cvShowImage("thresholded", ctx->thr_image);
+        oldimage=cvCloneImage(ctx->image);
+
     }
-    oldimage=cvCloneImage(ctx->image);
 }
 
 int main(int argc, char **argv)
