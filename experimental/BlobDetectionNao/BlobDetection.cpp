@@ -407,12 +407,16 @@ void BlobDetection::init() {
                 //cvReleaseImage(&p_iplImage);
 
             } else {
-
+			
+		
                     //Switch LEDs RED ON, BLUE OFF
                         if(red_on == 0)
                         {
                             ledProxy->on(FACE_LED_RED);
                             red_on = 1;
+
+			    // stand up
+			    behavoirProxy->runBehavior(STAND);
                         }
                         if(blue_on == 1)
                         {
