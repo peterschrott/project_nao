@@ -12,21 +12,26 @@
 #include <alvision/alimage.h>
 #include <alproxies/albehaviormanagerproxy.h>
 #include <alproxies/almemoryproxy.h>
+#include <alproxies/alledsproxy.h>
 
-
+/*
 //Sensor includes
 #include <alvalue/alvalue.h>
 #include <alcommon/alproxy.h>
 #include <alcommon/albroker.h>
 #include <qi/log.hpp>
 #include <althread/alcriticalsection.h>
-
+*/
 // Include cvBlob
 #include "cvblob/BlobResult.h"
 
 using namespace cv;
 using namespace std;
 using namespace AL;
+
+const string FACE_LED_BLUE = "face_leds_blue";
+const string FACE_LED_GREEN = "face_leds_green";
+const string FACE_LED_RED = "face_leds_red";
 
 const string ARM_RIGHT_UP = "liftuprightarm_1";
 const string ARM_LEFT_UP = "liftupleftarm_1";
@@ -36,8 +41,16 @@ const string STAND = "StandUp";
 const int minBlobArea = 200;
 
 int touched = 0;
+int red_on = 0;
+int green_on = 0;
+int blue_on = 0;
+
+std::vector<std::string> names_blue;
+std::vector<std::string> names_red;
+std::vector<std::string> names_green;
 
 ALBehaviorManagerProxy* behavoirProxy;
+ALLedsProxy* ledProxy;
 
 BlobDetection::BlobDetection(boost::shared_ptr<ALBroker> broker, const std::string& name):
 		ALModule(broker, name) {
@@ -64,6 +77,76 @@ void BlobDetection::init() {
 		// Create a proxy to ALVideoDevice on the robot.
 		ALVideoDeviceProxy* camProxy = new ALVideoDeviceProxy(getParentBroker());
         behavoirProxy = new ALBehaviorManagerProxy(getParentBroker());
+        ledProxy = new ALLedsProxy(getParentBroker());
+
+        // Create red led group FACE_LED_RED
+        names_red.push_back("Face/Led/Red/Left/0Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/45Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/90Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/135Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/180Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/225Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/270Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Left/315Deg/Actuator/Value");
+
+        names_red.push_back("Face/Led/Red/Right/0Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/45Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/90Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/135Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/180Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/225Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/270Deg/Actuator/Value");
+        names_red.push_back("Face/Led/Red/Right/315Deg/Actuator/Value");
+
+        // Create green led group FACE_LED_GREEN
+        names_green.push_back("Face/Led/Green/Left/0Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/45Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/90Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/135Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/180Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/225Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/270Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Left/315Deg/Actuator/Value");
+
+        names_green.push_back("Face/Led/Green/Right/0Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/45Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/90Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/135Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/180Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/225Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/270Deg/Actuator/Value");
+        names_green.push_back("Face/Led/Green/Right/315Deg/Actuator/Value");
+
+        //Create blue led group FACE_LED_BLUE
+        names_blue.push_back("Face/Led/Blue/Left/0Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/45Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/90Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/135Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/180Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/225Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/270Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Left/315Deg/Actuator/Value");
+
+        names_blue.push_back("Face/Led/Blue/Right/0Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/45Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/90Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/135Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/180Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/225Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/270Deg/Actuator/Value");
+        names_blue.push_back("Face/Led/Blue/Right/315Deg/Actuator/Value");
+
+        ledProxy->createGroup(FACE_LED_GREEN,names_green);
+        ledProxy->createGroup(FACE_LED_RED,names_red);
+        ledProxy->createGroup(FACE_LED_BLUE,names_blue);
+
+        ledProxy->setIntensity(FACE_LED_BLUE,1);
+        ledProxy->setIntensity(FACE_LED_RED,1);
+        ledProxy->setIntensity(FACE_LED_GREEN,1);
+
+        ledProxy->off(FACE_LED_RED);
+        ledProxy->off(FACE_LED_BLUE);
+        ledProxy->off(FACE_LED_GREEN);
 
 		// Subscribe a client image requiring 640*480px and RGB colorspace.
 		const std::string cameraID = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
@@ -108,7 +191,20 @@ void BlobDetection::init() {
 		int j = 0;
         while(1) {
             if(touched) {
-                // Fetch the image from the nao camera, we subscribed on. Its in RGB colorspace
+
+                //Switch LEDs RED OFF, BLUE ON
+                if(red_on == 1)
+                {
+                    ledProxy->off(FACE_LED_RED);
+                    red_on = 0;
+                }
+                if(blue_on == 0)
+                {
+                    ledProxy->on(FACE_LED_BLUE);
+                    blue_on = 1;
+                }
+
+                //nao camera, we subscribed on. Its in RGB colorspace
                 ALImage *img_cam = (ALImage*)camProxy->getImageLocal(cameraID);
                 // RECODING: store the size (in memory meaning) of the image for recording purpouse
                 // size = img_cam->getSize();
@@ -277,11 +373,26 @@ void BlobDetection::init() {
                 //IplImage* p_iplImage = &ipl_imageSkinPixels;
                 //cvReleaseImage(&p_iplImage);
 
-                sleep(1);
+
             } else {
-                behavoirProxy->runBehavior(STAND);
-            }
-        }
+
+                    //Switch LEDs RED ON, BLUE OFF
+                        if(red_on == 0)
+                        {
+                            ledProxy->on(FACE_LED_RED);
+                            red_on = 1;
+                        }
+                        if(blue_on == 1)
+                        {
+                            ledProxy->off(FACE_LED_BLUE);
+                            blue_on = 0;
+                        }
+                    }
+                }
+
+
+            //sleep(1);
+
 
         // RECODING: close the video recorder
 		//videoFile.closeVideo();
