@@ -524,6 +524,7 @@ int BlobDetection::updateStatus(gestures gesture){
 	switch(gesture){
 		case LEFT_FLIP_UP:
 			handStatus = handStatus | (UP<<1);
+			break;
 		case RIGHT_FLIP_UP:
 			handStatus = handStatus | (UP);
 			break;
