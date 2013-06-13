@@ -35,6 +35,9 @@ const string STAND = "StandUp";
 
 const int minBlobArea = 200;
 
+//Init
+int handstatus handStatus = BOTH_DOWN;
+ 
 int touched = 0;
 
 ALBehaviorManagerProxy* behavoirProxy;
@@ -341,23 +344,68 @@ int BlobDetection::handleGestures(gestures doGesture) {
 	switch(doGesture){
 		case LEFT_FLIP_DOWN:
 			cout<<"LEFT FLIP DOWN"<<endl;
-			behavoirProxy->runBehavior(STAND);
+			updateStatus(LEFT_FLIP_DOWN);
+			//behavoirProxy->runBehavior(STAND);
 			break;
 		case LEFT_FLIP_UP:
 			cout<<"LEFT FLIP UP"<<endl;
-			behavoirProxy->runBehavior(ARM_RIGHT_UP);
+			updateStatus(LEFT_FLIP_UP);
+			//behavoirProxy->runBehavior(ARM_RIGHT_UP);
 			break;
 		case RIGHT_FLIP_DOWN:
 			cout<<"RIGHT FLIP DOWN"<<endl;
-			behavoirProxy->runBehavior(STAND);
+			updateStatus(RIGHT_FLIP_DOWN);
+			//behavoirProxy->runBehavior(STAND);
 			break;
 		case RIGHT_FLIP_UP:
 			cout<<"RIGHT FLIP UP"<<endl;
-			behavoirProxy->runBehavior(ARM_LEFT_UP);
+			updateStatus(RIGHT_FLIP_UP);
+			//behavoirProxy->runBehavior(ARM_LEFT_UP);
 			break;
 		default:
 			break;
 	}
 }
+int BlobDetection::updateStatus(gestures gesture){
+	//Set new Status
+	switch(gesture){
+		case LEFT_FLIP_UP:
+			handstatus = handstatus | (UP<<1);
+		case RIGHT_FLIP_UP:
+			handStatus = handStatus | (UP);
+			break;
+		case LEFT_FLIP_DOWN:
+			handStatus = handStatus & ((DOWN << 1)^1);
+			break;
+		case RIGHT_FLIP_DOWN:
+			handStatus = handStatus & (DOWN ^ 2 );
+			break;
+	}
+	
+	
+	//call Behaviors
+	switch(handStatus){
+		case LEFT_UP_RIGHT_DOWN:
+			behavoirProxy->runBehavior(ARM_RIGHT_UP);
+			break;
+		case LEFT_DOWN_RIGHT_UP:
+			behavoirProxy->runBehavior(ARM_LEFT_UP);
+			break;
+		case BOTH_UP:
+			behavoirProxy->runBehavior(ARM_BOTH_UP);
+			break;
+		case BOTH_DOWN:
+			behavoirProxy->runBehavior(STAND);
+			break;
+		default:
+			break;
+		
+	}
+	
+	
+
+
+}
+
 
 BlobDetection::~BlobDetection(){}
