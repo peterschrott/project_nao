@@ -41,6 +41,7 @@ int headMoved = 0;
 Hand handRight;
 // nao status
 int handStatus = BOTH_DOWN;
+int statusMask[4][4];
 
 // global variables for the proxies
 ALBehaviorManagerProxy behaviourProxy;
@@ -553,7 +554,7 @@ int BlobDetection::handleGestures(Gestures doGesture) {
 */
 int BlobDetection::updateStatus(Gestures gesture){
 	//Set new Status
-	switch(gesture){
+	/*switch(gesture){
 		case LEFT_FLIP_UP:
 			handStatus = handStatus | (UP<<1);
 			break;
@@ -566,7 +567,8 @@ int BlobDetection::updateStatus(Gestures gesture){
 		case RIGHT_FLIP_DOWN:
 			handStatus = handStatus & (DOWN ^ 2 );
 			break;
-	}
+	}*/
+	handStatus = getNewStatus(gesture, handStatus);
 
 	//call Behaviors
 	switch(handStatus){
@@ -586,6 +588,35 @@ int BlobDetection::updateStatus(Gestures gesture){
 			break;
 	}
 }
+
+
+
+int BlobDetection::getNewStatus(gestures gesture, handstatus oldStatus){
+    //new Status = statusMask[gesture][oldStatus]
+    statusMask[LEFT_FLIP_DOWN][LEFT_UP_RIGHT_DOWN]  = BOTH_DOWN;
+    statusMask[LEFT_FLIP_DOWN][LEFT_DOWN_RIGHT_UP]  = LEFT_DOWN_RIGHT_UP;
+    statusMask[LEFT_FLIP_DOWN][BOTH_DOWN]           = BOTH_DOWN;
+    statusMask[LEFT_FLIP_DOWN][BOTH_UP]             = LEFT_DOWN_RIGHT_UP;
+
+    statusMask[LEFT_FLIP_UP][LEFT_UP_RIGHT_DOWN]    = LEFT_UP_RIGHT_DOWN;
+    statusMask[LEFT_FLIP_UP][LEFT_DOWN_RIGHT_UP]    = BOTH_UP;
+    statusMask[LEFT_FLIP_UP][BOTH_DOWN]             = LEFT_UP_RIGHT_DOWN;
+    statusMask[LEFT_FLIP_UP][BOTH_UP]               = BOTH_UP;
+
+    statusMask[RIGHT_FLIP_DOWN][LEFT_UP_RIGHT_DOWN] = LEFT_UP_RIGHT_DOWN;
+    statusMask[RIGHT_FLIP_DOWN][LEFT_DOWN_RIGHT_UP] = BOTH_DOWN;
+    statusMask[RIGHT_FLIP_DOWN][BOTH_DOWN]          = BOTH_DOWN;
+    statusMask[RIGHT_FLIP_DOWN][BOTH_UP]            = LEFT_UP_RIGHT_DOWN;
+
+    statusMask[RIGHT_FLIP_UP][LEFT_UP_RIGHT_DOWN]   = BOTH_UP;
+    statusMask[RIGHT_FLIP_UP][LEFT_DOWN_RIGHT_UP]   = LEFT_DOWN_RIGHT_UP;
+    statusMask[RIGHT_FLIP_UP][BOTH_DOWN]            = LEFT_DOWN_RIGHT_UP;
+    statusMask[RIGHT_FLIP_UP][BOTH_UP]              = BOTH_UP;
+
+
+    return statusMask[gesture][oldStatus];
+}
+
 
 /**
 */
