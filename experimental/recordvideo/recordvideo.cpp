@@ -45,8 +45,8 @@ int captureVideo(const std::string& robotIp) {
     int fps = 30;
 
     /** Create the output file */
-    std::ofstream outfile(file.c_str());
-    outfile.close();
+    //std::ofstream outfile(file.c_str());
+    //outfile.close();
 
     /** Subscribe a client image requiring 1280*960px and YUV422 colorspace.*/
     const std::string clientName = camProxy.subscribeCamera("camera_01", 1, resolution, colorSpace, fps);
