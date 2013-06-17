@@ -1,4 +1,3 @@
-
 float pixelToRad( int pos, int maxPos, float maxRad )
 {
 	int delta; // pixel diff to 0 (0 is in the middle)
@@ -26,7 +25,7 @@ float pixelToRad( int pos, int maxPos, float maxRad )
 	
 	x = maxPos/2/sin(maxRad);
 	
-	ang = arcsin(delta/x);
+	ang = asin(delta/x);
 	
 	
 	return ang;
