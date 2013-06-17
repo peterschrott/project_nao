@@ -24,6 +24,7 @@ set(_srcs
     ./cvblob/BlobResult.h
     ./cvblob/ComponentLabeling.cpp
     ./cvblob/ComponentLabeling.h
+    ../math/angles.h
 )
 
 # Here we set the path to the static libs
