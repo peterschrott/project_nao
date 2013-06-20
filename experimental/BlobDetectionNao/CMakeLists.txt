@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6.4 FATAL_ERROR)
-project(BlobDetectionNao)
+project(BlobDetection)
 # this lets you find the qibuild cmake framework
 find_package(qibuild)
 
@@ -13,14 +13,27 @@ set(_srcs
     main.cpp
     BlobDetection.h
     BlobDetection.cpp
+    ./cvblob/blob.cpp
+    ./cvblob/blob.h
+    ./cvblob/BlobContour.cpp
+    ./cvblob/BlobContour.h
+    ./cvblob/BlobLibraryConfiguration.h
+    ./cvblob/BlobOperators.cpp
+    ./cvblob/BlobOperators.h
+    ./cvblob/BlobResult.cpp
+    ./cvblob/BlobResult.h
+    ./cvblob/ComponentLabeling.cpp
+    ./cvblob/ComponentLabeling.h
+    ../math/angles.h
+    ../math/angles.cpp
 )
 
 # Here we set the path to the static libs
-set(LIB_DIR
-  $ENV{PWD}/lib
-)
+#set(LIB_DIR
+#  $ENV{PWD}/lib
+#)
 # Add user library path to the link directories
-link_directories(${LIB_DIR})
+#link_directories(${LIB_DIR})
 
 if(BLOBDETECTION_IS_REMOTE)
   add_definitions(" -BLOBDETECTION_IS_REMOTE ")
@@ -28,7 +41,7 @@ if(BLOBDETECTION_IS_REMOTE)
 else()
   # local for NAO
   qi_create_lib(BlobDetection SHARED ${_srcs} SUBFOLDER naoqi)
-  target_link_libraries(BlobDetection cvblob)
+  #target_link_libraries(BlobDetection cvblob)
 endif()
 
 # Here we say that our executable depends on
