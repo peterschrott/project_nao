@@ -112,6 +112,8 @@ void NaoGestureRecognition::init()
 
                 // Create an openCv Mat header to convert the aldebaran AlImage image.
                 // To convert the aldebaran image only the data are of it are assigned to the openCv image.
+
+                // TODO::: the conversion from ALImage to Mat is not done properly, there might be an memory problem!!!!!
                 Mat img_hsv = Mat(Size(img_cam->getWidth(), img_cam->getHeight()), CV_8UC3);
 
                 uchar* img_data = (uchar*)malloc(img_cam->getSize());
