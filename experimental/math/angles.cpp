@@ -1,3 +1,6 @@
+#include <math.h>
+#include "angles.h"
+
 
 float pixelToRad( int pos, int maxPos, float maxRad )
 {
