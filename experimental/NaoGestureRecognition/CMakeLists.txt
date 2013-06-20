@@ -13,6 +13,8 @@ set(_srcs
     main.cpp
     Nao.h
     Nao.cpp
+    NaoGestureRecognition.h
+    NaoGestureRecognition.cpp
     ./cvblob/blob.cpp
     ./cvblob/blob.h
     ./cvblob/BlobContour.cpp
