@@ -13,6 +13,9 @@
 // opencv includes
 #include <opencv2/core/core.hpp>
 
+// 
+#include "states.h"
+
 using namespace cv;
 using namespace std;
 using namespace AL;
@@ -30,7 +33,7 @@ class Nao {
         Mat getCameraImage();
         void trackPointWithHead(int, int);
 
-        //void updateStatus(Gesture);
+        void updateStatus(Gesture);
 
         void moveArmRightUp();
         void moveArmLeftUp();
@@ -60,8 +63,8 @@ class Nao {
         bool eyeLedsRedOn;
 
         // for naos fsm
-        FsmStatus fsmMask[4][4];
-        FsmStatus fsmStatus;
+        HandStatus fsmMask[4][4];
+        HandStatus fsmStatus;
 
         // led groups
         vector<string> eyeLedsBlueGroup;

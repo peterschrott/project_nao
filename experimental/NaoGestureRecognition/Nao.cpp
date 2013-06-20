@@ -34,8 +34,8 @@ Nao::Nao(boost::shared_ptr<AL::ALBroker> parentBroker)
     //cameraId = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
 
 
-    memProxy->subscribeToEvent("FrontTactilTouched", "NaoGestureRecognition","onFrontTactilTouched");
-    memProxy->subscribeToEvent("MiddleTactilTouched", "NaoGestureRecognition","onMiddleTactilTouched");
+    //memProxy->subscribevent("FrontTactilTouched", "NaoGestureRecognition","onFrontTactilTouched");
+    //memProxy->subscribeToEvent("MiddleTactilTouched", "NaoGestureRecognition","onMiddleTactilTouched");
 }
 
 /** @brief dBehaviour
