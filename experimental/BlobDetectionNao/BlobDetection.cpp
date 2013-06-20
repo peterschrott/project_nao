@@ -1,6 +1,7 @@
 #include "BlobDetection.h"
 
 #include <iostream>
+#include "math.h"
 
 // opencv includes
 #include <opencv2/opencv.hpp>
@@ -13,6 +14,7 @@
 #include <alproxies/albehaviormanagerproxy.h>
 #include <alproxies/almemoryproxy.h>
 #include <alproxies/alledsproxy.h>
+#include <alproxies/almotionproxy.h>
 
 //Sensor includes
 #include <alvalue/alvalue.h>
@@ -56,6 +58,7 @@ int blue_on = 0;
 
 ALBehaviorManagerProxy* behavoirProxy;
 ALLedsProxy* ledProxy;
+ALMotionProxy* motionProxy;
 
 BlobDetection::BlobDetection(boost::shared_ptr<ALBroker> broker, const std::string& name):
     ALModule(broker, name)
@@ -89,6 +92,7 @@ void BlobDetection::init()
         ALVideoDeviceProxy* camProxy = new ALVideoDeviceProxy(getParentBroker());
         behavoirProxy = new ALBehaviorManagerProxy(getParentBroker());
         ledProxy = new ALLedsProxy(getParentBroker());
+        motionProxy = new ALMotionProxy(getParentBroker());
 
         initLeds();
 
@@ -107,10 +111,38 @@ void BlobDetection::init()
         // stand up
         behavoirProxy->runBehavior(STAND);
 
+        // RECODING: prepare vido recording
+        /*
+        int size;
+        std::string arvFile = std::string("/home/nao/video");
+
+        streamHeader tmpStreamHeader;
+        std::vector<streamHeader> streamHeaderVector;
+        ALVideo videoFile;
+
+        tmpStreamHeader.width = 640;
+        tmpStreamHeader.height = 480;
+        tmpStreamHeader.colorSpace = AL::kRGBColorSpace; // this is not really necessary, coz in pyuv u decide in which colorspace the vid is shown
+        tmpStreamHeader.pixelDepth = 8;
+        streamHeaderVector.push_back(tmpStreamHeader);
+
+        std::cout<<"Output arv file properties: "<< streamHeaderVector[0].width <<"x"<< streamHeaderVector[0].height
+            <<" Colorspace id:"<< streamHeaderVector[0].colorSpace <<" Pixel depth:"<< streamHeaderVector[0].pixelDepth
+            <<std::endl;
+
+        if( !videoFile.recordVideo( arvFile, 0, streamHeaderVector ) ) {
+            std::cout<<"Error writing "<< arvFile <<" file."<<std::endl;
+            return;
+        }
+        */
+
+        int j = 0;
+
         while(1)
         {
             if(touched)
             {
+                //j++;
                 //Switch LEDs RED OFF, BLUE ON
                 if(red_on == 1)
                 {
@@ -158,6 +190,11 @@ void BlobDetection::init()
                 // Assing the Mat (C++) to an IplImage (C), this is necessary because the blob detection is writtn in old opnCv C version
                 IplImage ipl_imageSkinPixels = imageSkinPixels;
 
+                // RECODING: record the video using the C container variable
+                // RECODING: store the size (in memory meaning) of the image for recording purpouse
+                //size = img_cam->getSize();
+                //videoFile.write((char*) ipl_imageSkinPixels.imageData, size/3);
+
                 // Set up the blob detection.
                 CBlobResult blobs;
                 blobs.ClearBlobs();
@@ -175,6 +212,8 @@ void BlobDetection::init()
                 else if(blobs.GetNumBlobs() == 1)
                 {
                     //head detected
+                    trackHead(getCenterPoint(blobs.GetBlob(0)->GetBoundingBox()).x, getCenterPoint(blobs.GetBlob(0)->GetBoundingBox()).y);
+
                 }
                 else if(blobs.GetNumBlobs() == 2 || blobs.GetNumBlobs() == 3)
                 {
@@ -306,13 +345,17 @@ void BlobDetection::init()
                 leftOrientationLast = leftOrientationCur;
                 rightOrientationLast = rightOrientationCur;
 
+                // RECODING: close the video recorder
+                //videoFile.closeVideo();
+
                 // Free all the resources.
                 camProxy->releaseImage(cameraID);
 
                 //IplImage* p_iplImage = &ipl_imageSkinPixels;
                 //cvReleaseImage(&p_iplImage);
 
-                sleep(1);
+                qi::os::sleep(0.5f);
+                //sleep(1);
             }
             else
             {
@@ -321,13 +364,13 @@ void BlobDetection::init()
                 {
                     ledProxy->on(FACE_LED_RED);
                     red_on = 1;
+                    behavoirProxy->runBehavior(STAND);
                 }
                 if(blue_on == 1)
                 {
                     ledProxy->off(FACE_LED_BLUE);
                     blue_on = 0;
                 }
-                behavoirProxy->runBehavior(STAND);
             }
         }
         camProxy->unsubscribe(cameraID);
@@ -567,11 +610,31 @@ void BlobDetection::initLeds()
 */
 void BlobDetection::trackHead(int x, int y)
 {
-
     // x value
-    pixelToRad(x, 640, degreeToRad(60.9));
+    float a = pixelToRad(x, 640, degreeToRad(60.9)) * -1;
+    float g = pixelToDeg(x, 640, 60.9) * -1;
 
+    cout << "                  angle: " << g << endl;
+    cout << "                  angle: " << a << endl;
 
+    if(abs(a) < 0.08f) {
+        return;
+    }
+
+    // Example showing how to set angles, using a fraction of max speed
+    ALValue name = ALValue("HeadYaw");
+    ALValue angle = ALValue(a);
+    ALValue time = ALValue(1.0f);
+    float fractionMaxSpeed = 0.2;
+
+    motionProxy->setStiffnesses(name, ALValue(0.6f));
+
+    motionProxy->angleInterpolation(name, angle, time, true);
+
+    //motionProxy->setAngles(name, angle, fractionMaxSpeed);
+    qi::os::sleep(0.8f);
+
+    //motionProxy->setStiffnesses(names, ALValue(0.0f));
 }
 
 BlobDetection::~BlobDetection() {}
