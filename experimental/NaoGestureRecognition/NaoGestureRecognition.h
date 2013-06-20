@@ -19,12 +19,16 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 
+
+//
+#include "states.h"
+
 typedef enum {NONE = 0,PORTRAIT = 1,LANDSCAPE = 2} HandOrientation;
 typedef enum {NOCHANGE = 0,PORTRAIT_TO_LANDSCAPE = 1,LANDSCAPE_TO_PORTRAIT = 2} HandOrientationChange;
 typedef enum {LEFT = 0,RIGHT = 1} Handside;
-typedef enum {LEFT_FLIP_DOWN = 0,LEFT_FLIP_UP = 1,RIGHT_FLIP_DOWN = 2,RIGHT_FLIP_UP = 3} Gesture;
+//typedef enum {LEFT_FLIP_DOWN = 0,LEFT_FLIP_UP = 1,RIGHT_FLIP_DOWN = 2,RIGHT_FLIP_UP = 3} Gesture;
 typedef enum {UP = 1,DOWN = 0} HandPosition;
-typedef enum {LEFT_UP_RIGHT_DOWN = 2,LEFT_DOWN_RIGHT_UP = 1, BOTH_UP = 3, BOTH_DOWN = 0} HandStatus;
+//typedef enum {LEFT_UP_RIGHT_DOWN = 2,LEFT_DOWN_RIGHT_UP = 1, BOTH_UP = 3, BOTH_DOWN = 0} HandStatus;
 
 class NaoGestureRecognition : public AL::ALModule
 {

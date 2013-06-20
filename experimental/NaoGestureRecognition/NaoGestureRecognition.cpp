@@ -109,7 +109,7 @@ void NaoGestureRecognition::init()
         HandOrientation rightOrientationCur = NONE, leftOrientationCur = NONE;
 
         // stand up
-        nao->standUp()
+        nao->standUp();
         //behavoirProxy->runBehavior(STAND);
 
         while(1)
