@@ -26,6 +26,8 @@ set(_srcs
     ./cvblob/BlobResult.h
     ./cvblob/ComponentLabeling.cpp
     ./cvblob/ComponentLabeling.h
+    ../math/angles.h
+    ../math/angles.cpp
 )
 
 if(NAO_GESTURERECOGNITION_IS_REMOTE)
@@ -42,7 +44,7 @@ endif()
 # - OPENCV (display)
 #
 # It automatically links with the corresponding libraries and make their headers available.
-qi_use_lib(NaoGestureRecognition ALCOMMON ALVISION OPENCV2_CORE OPENCV2_IMGPROC OPENCV2_HIGHGUI)
+qi_use_lib(NaoGestureRecognition ALCOMMON ALVISION OPENCV2_CORE OPENCV2_IMGPROC OPENCV2_HIGHGUI m)
 
 
 
