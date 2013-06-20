@@ -13,6 +13,7 @@
 #include <alproxies/albehaviormanagerproxy.h>
 #include <alproxies/almemoryproxy.h>
 #include <alproxies/alledsproxy.h>
+#include <alproxies/almotionproxy.h>
 
 //Sensor includes
 #include <alvalue/alvalue.h>
@@ -24,7 +25,7 @@
 // Include cvBlob
 #include "cvblob/BlobResult.h"
 
-// our includes
+// Our includes
 #include "../math/angles.h"
 #include "Nao.h"
 
@@ -32,31 +33,16 @@ using namespace cv;
 using namespace std;
 using namespace AL;
 
-const string ARM_RIGHT_UP = "liftuprightarm_1";
-const string ARM_LEFT_UP = "liftupleftarm_1";
-const string ARM_BOTH_UP = "liftuparmboth_1";
-const string STAND = "StandUp";
-
-const string FACE_LED_BLUE = "face_leds_blue";
-const string FACE_LED_GREEN = "face_leds_green";
-const string FACE_LED_RED = "face_leds_red";
-
-std::vector<std::string> names_blue;
-std::vector<std::string> names_red;
-std::vector<std::string> names_green;
-
 const int minBlobArea = 200;
+
+int touched = 0;
 
 int handStatus = BOTH_DOWN;
 int statusMask[4][4];
 
-int touched = 0;
-int red_on = 0;
-int green_on = 0;
-int blue_on = 0;
-
-//ALBehaviorManagerProxy* behavoirProxy;
 ALLedsProxy* ledProxy;
+ALMotionProxy* motionProxy;
+ALVideoDeviceProxy* camProxy;
 
 Nao* nao;
 
@@ -90,11 +76,12 @@ void NaoGestureRecognition::init()
         nao = new Nao(getParentBroker());
         initStatusMask();
         // Create a proxy to ALVideoDevice on the robot.
-        ALVideoDeviceProxy* camProxy = new ALVideoDeviceProxy(getParentBroker());
+        camProxy = new ALVideoDeviceProxy(getParentBroker());
         //behavoirProxy = new ALBehaviorManagerProxy(getParentBroker());
         ledProxy = new ALLedsProxy(getParentBroker());
+        motionProxy = new ALMotionProxy(getParentBroker());
 
-        initLeds();
+        //initLeds();
 
         // Subscribe a client image requiring 640*480px and RGB colorspace.
         const std::string cameraID = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
@@ -119,23 +106,20 @@ void NaoGestureRecognition::init()
                 //Switch LEDs RED OFF, BLUE ON
                 nao->switchEyeLedsRedOff();
                 nao->switchEyeLedsBlueOn();
-                /*if(red_on == 1)
-                {
-                    ledProxy->off(FACE_LED_RED);
-                    red_on = 0;
-                }
-                if(blue_on == 0)
-                {
-                    ledProxy->on(FACE_LED_BLUE);
-                    blue_on = 1;
-                }*/
+
                 // Fetch the image from the nao camera, we subscribed on. Its in RGB colorspace
                 ALImage *img_cam = (ALImage*)camProxy->getImageLocal(cameraID);
 
                 // Create an openCv Mat header to convert the aldebaran AlImage image.
                 // To convert the aldebaran image only the data are of it are assigned to the openCv image.
                 Mat img_hsv = Mat(Size(img_cam->getWidth(), img_cam->getHeight()), CV_8UC3);
-                img_hsv.data = (uchar*) img_cam->getData();
+
+                uchar* img_data = (uchar*)malloc(img_cam->getSize());
+                memcpy(img_data, (uchar*)img_cam->getData(), img_cam->getSize());
+
+                img_hsv.data = img_data;
+
+                //img_hsv.data = (uchar*) img_cam->getData();
 
                 // Convert the RGB image from the camera to an HSV image */
                 cvtColor(img_hsv, img_hsv, CV_RGB2HSV);
@@ -162,6 +146,8 @@ void NaoGestureRecognition::init()
                 bitwise_and(planeH, planeS, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S.
                 bitwise_and(imageSkinPixels, planeV, imageSkinPixels);	// imageSkin = H {BITWISE_AND} S {BITWISE_AND} V.
 
+                // ######## PICTURE PROCESSING END ##############
+
                 // Assing the Mat (C++) to an IplImage (C), this is necessary because the blob detection is writtn in old opnCv C version
                 IplImage ipl_imageSkinPixels = imageSkinPixels;
 
@@ -182,6 +168,7 @@ void NaoGestureRecognition::init()
                 else if(blobs.GetNumBlobs() == 1)
                 {
                     //head detected
+                    nao->trackPointWithHead(getCenterPoint(blobs.GetBlob(0)->GetBoundingBox()).x, getCenterPoint(blobs.GetBlob(0)->GetBoundingBox()).y);
                 }
                 else if(blobs.GetNumBlobs() == 2 || blobs.GetNumBlobs() == 3)
                 {
@@ -268,7 +255,7 @@ void NaoGestureRecognition::init()
 
                     // bobs are detected.
                     // adjuste naos head to detected head-bolb
-                    trackHead(getCenterPoint(rect[indexHead]).x, getCenterPoint(rect[indexHead]).y);
+                    nao->trackPointWithHead(getCenterPoint(rect[indexHead]).x, getCenterPoint(rect[indexHead]).y);
 
                     //Get Orientations from Hand rects
                     leftOrientationCur = (indexHandLeft != -1)?getOrientationOfRect(rect[indexHandLeft]):NONE;
@@ -316,10 +303,10 @@ void NaoGestureRecognition::init()
                 // Free all the resources.
                 camProxy->releaseImage(cameraID);
 
-                //IplImage* p_iplImage = &ipl_imageSkinPixels;
-                //cvReleaseImage(&p_iplImage);
+                //free(&ipl_imageSkinPixels);
+                //free(img_hsv.data);
 
-                sleep(1);
+                qi::os::sleep(0.5f);
             }
             else
             {
@@ -327,17 +314,6 @@ void NaoGestureRecognition::init()
                 nao->switchEyeLedsRedOn();
                 nao->standUp();
                 nao->switchEyeLedsBlueOff();
-                /*if(red_on == 0)
-                {
-                    ledProxy->on(FACE_LED_RED);
-                    red_on = 1;
-                }
-                if(blue_on == 1)
-                {
-                    ledProxy->off(FACE_LED_BLUE);
-                    blue_on = 0;
-                }*/
-                //behavoirProxy->runBehavior(STAND);
             }
         }
         camProxy->unsubscribe(cameraID);
@@ -438,22 +414,6 @@ int NaoGestureRecognition::handleGestures(Gesture doGesture)
 int NaoGestureRecognition::updateStatus(Gesture gesture)
 {
     //Set new Status
-    /*switch(gesture)
-    {
-    case LEFT_FLIP_UP:
-        handStatus = handStatus | (UP<<1);
-        break;
-    case RIGHT_FLIP_UP:
-        handStatus = handStatus | (UP);
-        break;
-    case LEFT_FLIP_DOWN:
-        handStatus = handStatus & ((DOWN << 1)^1);
-        break;
-    case RIGHT_FLIP_DOWN:
-        handStatus = handStatus & (DOWN ^ 2 );
-        break;
-    }*/
-
     handStatus = statusMask[gesture][handStatus];
 
     //call Behaviors
@@ -473,7 +433,7 @@ int NaoGestureRecognition::updateStatus(Gesture gesture)
         break;
     case BOTH_DOWN:
         //behavoirProxy->runBehavior(STAND);
-        nao->standUp();
+        nao->moveArmBothDown();
         break;
     default:
         break;
@@ -502,89 +462,6 @@ void NaoGestureRecognition::initStatusMask()
     statusMask[RIGHT_FLIP_UP][LEFT_DOWN_RIGHT_UP]   = LEFT_DOWN_RIGHT_UP;
     statusMask[RIGHT_FLIP_UP][BOTH_DOWN]            = LEFT_DOWN_RIGHT_UP;
     statusMask[RIGHT_FLIP_UP][BOTH_UP]              = BOTH_UP;
-}
-
-void NaoGestureRecognition::initLeds()
-{
-    // Create red led group FACE_LED_RED
-    names_red.push_back("Face/Led/Red/Left/0Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/45Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/90Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/135Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/180Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/225Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/270Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Left/315Deg/Actuator/Value");
-
-    names_red.push_back("Face/Led/Red/Right/0Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/45Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/90Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/135Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/180Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/225Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/270Deg/Actuator/Value");
-    names_red.push_back("Face/Led/Red/Right/315Deg/Actuator/Value");
-
-    // Create green led group FACE_LED_GREEN
-    names_green.push_back("Face/Led/Green/Left/0Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/45Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/90Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/135Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/180Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/225Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/270Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Left/315Deg/Actuator/Value");
-
-    names_green.push_back("Face/Led/Green/Right/0Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/45Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/90Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/135Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/180Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/225Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/270Deg/Actuator/Value");
-    names_green.push_back("Face/Led/Green/Right/315Deg/Actuator/Value");
-
-    //Create blue led group FACE_LED_BLUE
-    names_blue.push_back("Face/Led/Blue/Left/0Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/45Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/90Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/135Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/180Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/225Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/270Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Left/315Deg/Actuator/Value");
-
-    names_blue.push_back("Face/Led/Blue/Right/0Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/45Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/90Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/135Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/180Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/225Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/270Deg/Actuator/Value");
-    names_blue.push_back("Face/Led/Blue/Right/315Deg/Actuator/Value");
-
-    ledProxy->createGroup(FACE_LED_GREEN,names_green);
-    ledProxy->createGroup(FACE_LED_RED,names_red);
-    ledProxy->createGroup(FACE_LED_BLUE,names_blue);
-
-    ledProxy->setIntensity(FACE_LED_BLUE,1);
-    ledProxy->setIntensity(FACE_LED_RED,1);
-    ledProxy->setIntensity(FACE_LED_GREEN,1);
-
-    ledProxy->off(FACE_LED_RED);
-    ledProxy->off(FACE_LED_BLUE);
-    ledProxy->off(FACE_LED_GREEN);
-}
-
-/**
-*/
-void NaoGestureRecognition::trackHead(int x, int y)
-{
-
-    // x value
-    pixelToRad(x, 640, degreeToRad(60.9));
-
-
 }
 
 NaoGestureRecognition::~NaoGestureRecognition() {}

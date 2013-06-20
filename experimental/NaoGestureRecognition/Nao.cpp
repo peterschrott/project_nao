@@ -1,6 +1,10 @@
 #include "Nao.h"
 
+// Aldebaran includes
 #include <alvision/alimage.h>
+
+// Our includes
+#include "../math/angles.h"
 
 // constants for the led groups
 const string EYE_LEDS_BLUE = "eye_leds_blue";
@@ -11,6 +15,7 @@ const string EYE_LEDS_RED = "eye_leds_red";
 const std::string ARM_RIGHT_UP = "liftuprightarm_1";
 const std::string ARM_LEFT_UP = "liftupleftarm_1";
 const std::string ARM_BOTH_UP = "liftuparmboth_1";
+const std::string ARM_BOTH_DOWN = "liftdownarmboth_1";
 const std::string STAND = "StandUp";
 
 /** @brief Nao
@@ -165,6 +170,7 @@ void Nao::initProxies()
     behaviourProxy = new ALBehaviorManagerProxy(parentBroker);
     ledProxy = new ALLedsProxy(parentBroker);
     //memProxy = new ALMemoryProxy(parentBroker);
+    motionProxy = new ALMotionProxy(parentBroker);
 }
 
 /** @brief trackPointWithHead
@@ -173,7 +179,32 @@ void Nao::initProxies()
   */
 void Nao::trackPointWithHead(int x, int y)
 {
-    // TODO
+    // x value
+    float a = pixelToRad(x, 640, degreeToRad(60.9)) * -1;
+    float g = pixelToDeg(x, 640, 60.9) * -1;
+
+    cout << "                  angle: " << g << endl;
+    cout << "                  angle: " << a << endl;
+
+    if(abs(a) < 0.08f)
+    {
+        return;
+    }
+
+    // Example showing how to set angles, using a fraction of max speed
+    ALValue name = ALValue("HeadYaw");
+    ALValue angle = ALValue(a);
+    ALValue time = ALValue(1.0f);
+    float fractionMaxSpeed = 0.2;
+
+    motionProxy->setStiffnesses(name, ALValue(0.6f));
+
+    motionProxy->angleInterpolation(name, angle, time, true);
+
+    //motionProxy->setAngles(name, angle, fractionMaxSpeed);
+    qi::os::sleep(0.8f);
+
+    //motionProxy->setStiffnesses(names, ALValue(0.0f));
 }
 
 /** @brief switchEyeLedsBlueOn
@@ -276,6 +307,14 @@ void Nao::moveArmLeftUp() {
   */
 void Nao::moveArmBothUp() {
     doBehaviour(ARM_BOTH_UP);
+}
+
+/** @brief moveArmBothDown
+  *
+  * @todo: document this function
+  */
+void Nao::moveArmBothDown() {
+    doBehaviour(ARM_BOTH_DOWN);
 }
 
 /** @brief standUp

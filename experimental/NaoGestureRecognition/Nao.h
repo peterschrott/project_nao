@@ -9,11 +9,12 @@
 #include <alproxies/albehaviormanagerproxy.h>
 #include <alproxies/almemoryproxy.h>
 #include <alproxies/alledsproxy.h>
+#include <alproxies/almotionproxy.h>
 
 // opencv includes
 #include <opencv2/core/core.hpp>
 
-// 
+//
 #include "states.h"
 
 using namespace cv;
@@ -38,6 +39,7 @@ class Nao {
         void moveArmRightUp();
         void moveArmLeftUp();
         void moveArmBothUp();
+        void moveArmBothDown();
         void standUp();
 
         void switchEyeLedsGreenOn();
@@ -55,6 +57,7 @@ class Nao {
         ALLedsProxy* ledProxy;
         ALVideoDeviceProxy* camProxy;
         ALMemoryProxy* memProxy;
+        ALMotionProxy* motionProxy;
         // subscriber id for nao cam
         string cameraId;
         // led status flags

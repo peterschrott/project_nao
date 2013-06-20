@@ -20,7 +20,7 @@
 #include <opencv2/opencv.hpp>
 
 
-//
+// header for the  type defs
 #include "states.h"
 
 typedef enum {NONE = 0,PORTRAIT = 1,LANDSCAPE = 2} HandOrientation;
@@ -55,8 +55,6 @@ private:
     HandOrientation getOrientationOfRect(cv::Rect rect);
     cv::Point getCenterPoint(cv::Rect rect);
     void initStatusMask();
-    void initLeds();
-    void trackHead(int x, int y);
 };
 
 #endif
