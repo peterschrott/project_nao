@@ -35,13 +35,13 @@ using namespace AL;
 
 const int minBlobArea = 200;
 
-int touched = 0;
+bool gestureRecognitionActive = false;;
+bool standUp = true;
+bool moduleActive = true;
 
 int handStatus = BOTH_DOWN;
 int statusMask[4][4];
 
-ALLedsProxy* ledProxy;
-ALMotionProxy* motionProxy;
 ALVideoDeviceProxy* camProxy;
 
 Nao* nao;
@@ -56,16 +56,27 @@ NaoGestureRecognition::NaoGestureRecognition(boost::shared_ptr<ALBroker> broker,
 
     functionName("onMiddleTactilTouched", getName(), "Method wich is called after middle tactil is touched.");
     BIND_METHOD(NaoGestureRecognition::onMiddleTactilTouched);
+
+    functionName("onRearTactilTouched", getName(), "Method wich is called after rear tactil is touched.");
+    BIND_METHOD(NaoGestureRecognition::onRearTactilTouched);
 }
 
 void NaoGestureRecognition::onFrontTactilTouched()
 {
-    touched = 1;
+    cerr << "front tractile touched" << endl;
+    gestureRecognitionActive = true;
 }
 
 void NaoGestureRecognition::onMiddleTactilTouched()
 {
-    touched = 0;
+    cerr << "middle tractile touched" << endl;
+    gestureRecognitionActive = false;
+}
+
+void NaoGestureRecognition::onRearTactilTouched()
+{
+    cerr << "rear tractile touched" << endl;
+    moduleActive = false;
 }
 
 void NaoGestureRecognition::init()
@@ -74,14 +85,10 @@ void NaoGestureRecognition::init()
     try
     {
         nao = new Nao(getParentBroker());
+
         initStatusMask();
         // Create a proxy to ALVideoDevice on the robot.
-        camProxy = new ALVideoDeviceProxy(getParentBroker());
-        //behavoirProxy = new ALBehaviorManagerProxy(getParentBroker());
-        ledProxy = new ALLedsProxy(getParentBroker());
-        motionProxy = new ALMotionProxy(getParentBroker());
-
-        //initLeds();
+        camProxy = new ALVideoDeviceProxy(getParentBroker()); // todo use nao class
 
         // Subscribe a client image requiring 640*480px and RGB colorspace.
         const std::string cameraID = camProxy->subscribeCamera("camera_01", 0, AL::kVGA, AL::kRGBColorSpace , 10);
@@ -89,23 +96,29 @@ void NaoGestureRecognition::init()
         // Create a proxy to ALMemoryProxy on the robot.
         ALMemoryProxy fMemoryProxy = ALMemoryProxy(getParentBroker());
         fMemoryProxy.subscribeToEvent("FrontTactilTouched", "NaoGestureRecognition","onFrontTactilTouched");
+        fMemoryProxy.subscribeToEvent("RearTactilTouched", "NaoGestureRecognition","onRearTactilTouched");
         fMemoryProxy.subscribeToEvent("MiddleTactilTouched", "NaoGestureRecognition","onMiddleTactilTouched");
 
         HandOrientation rightOrientationLast = NONE;
         HandOrientation leftOrientationLast = NONE;
         HandOrientation rightOrientationCur = NONE, leftOrientationCur = NONE;
 
-        // stand up
-        nao->standUp();
-        //behavoirProxy->runBehavior(STAND);
+        // sitDown
+        nao->sitDown();
+        standUp = true;
 
-        while(1)
+        while(moduleActive)
         {
-            if(touched)
+            if(gestureRecognitionActive)
             {
                 //Switch LEDs RED OFF, BLUE ON
                 nao->switchEyeLedsRedOff();
                 nao->switchEyeLedsBlueOn();
+                if(standUp) {
+                    standUp = false;
+                     nao->moveArmBothDown();
+                     nao->say("Hello! Please Start!");
+                }
 
                 // Fetch the image from the nao camera, we subscribed on. Its in RGB colorspace
                 ALImage *img_cam = (ALImage*)camProxy->getImageLocal(cameraID);
@@ -115,11 +128,10 @@ void NaoGestureRecognition::init()
 
                 // TODO::: the conversion from ALImage to Mat is not done properly, there might be an memory problem!!!!!
                 Mat img_hsv = Mat(Size(img_cam->getWidth(), img_cam->getHeight()), CV_8UC3);
-
                 uchar* img_data = (uchar*)malloc(img_cam->getSize());
                 memcpy(img_data, (uchar*)img_cam->getData(), img_cam->getSize());
-
-                img_hsv.data = img_data;
+                //img_hsv.data = img_data;
+                img_hsv.data = img_cam->getData();
 
                 //img_hsv.data = (uchar*) img_cam->getData();
 
@@ -305,19 +317,26 @@ void NaoGestureRecognition::init()
                 // Free all the resources.
                 camProxy->releaseImage(cameraID);
 
-                //free(&ipl_imageSkinPixels);
-                //free(img_hsv.data);
+                free(img_data);
 
-                qi::os::sleep(0.5f);
+                //IplImage* ptr = &ipl_imageSkinPixels;
+                //cvReleaseImage(&ptr);
+
+                qi::os::sleep(1.0f);
             }
             else
             {
                 //Switch LEDs RED ON, BLUE OFF
                 nao->switchEyeLedsRedOn();
-                nao->standUp();
+                if(!standUp) {
+                    nao->sitDown();
+                     nao->say("No more gestures?");
+                    standUp = true;
+                }
                 nao->switchEyeLedsBlueOff();
             }
         }
+        nao->sitDown();
         camProxy->unsubscribe(cameraID);
 
     }
@@ -466,4 +485,7 @@ void NaoGestureRecognition::initStatusMask()
     statusMask[RIGHT_FLIP_UP][BOTH_UP]              = BOTH_UP;
 }
 
-NaoGestureRecognition::~NaoGestureRecognition() {}
+NaoGestureRecognition::~NaoGestureRecognition()
+{
+    free(camProxy);
+}

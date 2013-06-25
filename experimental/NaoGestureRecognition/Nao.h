@@ -10,6 +10,7 @@
 #include <alproxies/almemoryproxy.h>
 #include <alproxies/alledsproxy.h>
 #include <alproxies/almotionproxy.h>
+#include <alproxies/altexttospeechproxy.h>
 
 // opencv includes
 #include <opencv2/core/core.hpp>
@@ -41,6 +42,7 @@ class Nao {
         void moveArmBothUp();
         void moveArmBothDown();
         void standUp();
+        void sitDown();
 
         void switchEyeLedsGreenOn();
         void switchEyeLedsGreenOff();
@@ -48,6 +50,8 @@ class Nao {
         void switchEyeLedsBlueOff();
         void switchEyeLedsRedOn();
         void switchEyeLedsRedOff();
+
+        void say(string phraseToSay);
 
     private:
         // ####### attributes #######
@@ -58,6 +62,7 @@ class Nao {
         ALVideoDeviceProxy* camProxy;
         ALMemoryProxy* memProxy;
         ALMotionProxy* motionProxy;
+        ALTextToSpeechProxy* speechProxy;
         // subscriber id for nao cam
         string cameraId;
         // led status flags

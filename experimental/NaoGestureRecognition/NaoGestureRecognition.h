@@ -47,6 +47,7 @@ public:
 private:
     void onFrontTactilTouched();
     void onMiddleTactilTouched();
+    void onRearTactilTouched();
     //int isMoving(Hand h);
     int handleGestures(Gesture doGesture);
     int updateStatus(Gesture gesture);

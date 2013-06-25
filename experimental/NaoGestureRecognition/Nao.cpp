@@ -12,10 +12,11 @@ const string EYE_LEDS_GREEN = "eye_leds_green";
 const string EYE_LEDS_RED = "eye_leds_red";
 
 // constens for the behaviour
-const std::string ARM_RIGHT_UP = "liftuprightarm_1";
-const std::string ARM_LEFT_UP = "liftupleftarm_1";
-const std::string ARM_BOTH_UP = "liftuparmboth_1";
-const std::string ARM_BOTH_DOWN = "liftdownarmboth_1";
+const std::string ARM_RIGHT_UP = "arm_right_up";
+const std::string ARM_LEFT_UP = "arm_left_up";
+const std::string ARM_BOTH_UP = "arm_both_up";
+const std::string ARM_BOTH_DOWN = "arm_both_down";
+const std::string SIT_DOWN = "sitDown";
 const std::string STAND = "StandUp";
 
 /** @brief Nao
@@ -171,6 +172,7 @@ void Nao::initProxies()
     ledProxy = new ALLedsProxy(parentBroker);
     //memProxy = new ALMemoryProxy(parentBroker);
     motionProxy = new ALMotionProxy(parentBroker);
+    speechProxy = new ALTextToSpeechProxy(parentBroker);
 }
 
 /** @brief trackPointWithHead
@@ -325,6 +327,14 @@ void Nao::standUp() {
     doBehaviour(STAND);
 }
 
+/** @brief standUp
+  *
+  * @todo: document this function
+  */
+void Nao::sitDown() {
+    doBehaviour(SIT_DOWN);
+}
+
 /** @brief updateStatus
   *
   * @todo: document this function
@@ -385,6 +395,10 @@ void Nao::initFsm()
     fsmStatus = BOTH_DOWN;
 }
 
+void Nao::say(string phraseToSay) {
+    speechProxy->say(phraseToSay);
+}
+
 /** @brief ~Nao
   *
   * @todo: document this function
@@ -396,6 +410,8 @@ Nao::~Nao()
 
     free(behaviourProxy);
     free(ledProxy);
-    free(camProxy);
-    free(memProxy);
+    //free(camProxy);
+    //free(memProxy);
+    free(speechProxy);
+    free(motionProxy);
 }
