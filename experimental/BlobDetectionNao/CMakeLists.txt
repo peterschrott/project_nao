@@ -13,17 +13,17 @@ set(_srcs
     main.cpp
     BlobDetection.h
     BlobDetection.cpp
-    ./cvblob/blob.cpp
-    ./cvblob/blob.h
-    ./cvblob/BlobContour.cpp
-    ./cvblob/BlobContour.h
-    ./cvblob/BlobLibraryConfiguration.h
-    ./cvblob/BlobOperators.cpp
-    ./cvblob/BlobOperators.h
-    ./cvblob/BlobResult.cpp
-    ./cvblob/BlobResult.h
-    ./cvblob/ComponentLabeling.cpp
-    ./cvblob/ComponentLabeling.h
+    ../cvblob/blob.cpp
+    ../cvblob/blob.h
+    ../cvblob/BlobContour.cpp
+    ../cvblob/BlobContour.h
+    ../cvblob/BlobLibraryConfiguration.h
+    ../cvblob/BlobOperators.cpp
+    ../cvblob/BlobOperators.h
+    ../cvblob/BlobResult.cpp
+    ../cvblob/BlobResult.h
+    ../cvblob/ComponentLabeling.cpp
+    ../cvblob/ComponentLabeling.h
     ../math/angles.h
     ../math/angles.cpp
 )
