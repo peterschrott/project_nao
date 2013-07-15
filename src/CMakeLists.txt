@@ -1,39 +1,41 @@
-# Copyright (C) 2010 Aldebaran Robotics
-
 cmake_minimum_required(VERSION 2.6.4 FATAL_ERROR)
-project(Prog)
+project(NaoGestureRecognition)
 # this lets you find the qibuild cmake framework
 find_package(qibuild)
 
-# Here, we set the varible PROG_IS_REMOTE to OFF
-option(PROG_IS_REMOTE
+# Here, we set the varible NAO_GESTURERECOGNITION_IS_REMOTE to OFF
+option(NAO_GESTURERECOGNITION_IS_REMOTE
   "module is compiled as a remote module (ON or OFF)"
   OFF)
 
-# Here, we create an executable named "Prog" from the source files.
+# Here, we create an executable named "NaoGestureRecognition" from the source files.
 set(_srcs
     main.cpp
-    configuration.hpp
-    action.hpp
-    camera.hpp
-    camera.cpp
-    gestures.hpp
-    shapes.hpp
+    Nao.h
+    Nao.cpp
+    NaoGestureRecognition.h
+    NaoGestureRecognition.cpp
+    ./cvblob/blob.cpp
+    ./cvblob/blob.h
+    ./cvblob/BlobContour.cpp
+    ./cvblob/BlobContour.h
+    ./cvblob/BlobLibraryConfiguration.h
+    ./cvblob/BlobOperators.cpp
+    ./cvblob/BlobOperators.h
+    ./cvblob/BlobResult.cpp
+    ./cvblob/BlobResult.h
+    ./cvblob/ComponentLabeling.cpp
+    ./cvblob/ComponentLabeling.h
+    ./math/angles.h
+    ./math/angles.cpp
 )
 
-# Here we set the path to the static libs
-set(LIB_DIR
-  $ENV{PWD}/../lib
-)
-
-link_directories(${LIB_DIR})
-
-if(PROG_IS_REMOTE)
-  add_definitions(" -DPROG_IS_REMOTE ")
-  qi_create_bin(Prog ${_srcs})
+if(NAO_GESTURERECOGNITION_IS_REMOTE)
+  add_definitions(" -DNAO_GESTURERECOGNITION_IS_REMOTE ")
+  qi_create_bin(NaoGestureRecognition ${_srcs})
 else()
-  qi_create_lib(Prog SHARED ${_srcs} SUBFOLDER naoqi)
-  target_link_libraries(Prog cvblob)
+  # local for NAO
+  qi_create_lib(NaoGestureRecognition SHARED ${_srcs} SUBFOLDER naoqi)
 endif()
 
 # Here we say that our executable depends on
@@ -42,7 +44,7 @@ endif()
 # - OPENCV (display)
 #
 # It automatically links with the corresponding libraries and make their headers available.
-qi_use_lib(Prog ALCOMMON BOOST ALVISION OPENCV2_CORE OPENCV2_IMGPROC OPENCV2_HIGHGUI)
+qi_use_lib(NaoGestureRecognition ALCOMMON ALVISION OPENCV2_CORE OPENCV2_IMGPROC OPENCV2_HIGHGUI m)
 
 
 
