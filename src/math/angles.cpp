@@ -2,6 +2,9 @@
 #include "angles.h"
 
 
+#include <math.h>
+#include "angles.h"
+
 float pixelToRad( int pos, int maxPos, float maxRad )
 {
 	int delta; // pixel diff to 0 (0 is in the middle)
