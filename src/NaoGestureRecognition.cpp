@@ -23,10 +23,10 @@
 #include <althread/alcriticalsection.h>
 
 // Include cvBlob
-#include "cvblob/BlobResult.h"
+#include "./cvblob/BlobResult.h"
 
 // Our includes
-#include "../math/angles.h"
+#include "./math/angles.h"
 #include "Nao.h"
 
 using namespace cv;

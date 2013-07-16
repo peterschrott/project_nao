@@ -24,7 +24,7 @@
 #include <althread/alcriticalsection.h>
 
 // Include cvBlob
-#include "cvblob/BlobResult.h"
+#include "../cvblob/BlobResult.h"
 
 // our includes
 #include "../math/angles.h"

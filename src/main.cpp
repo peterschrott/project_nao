@@ -1,70 +1,51 @@
-
-#include "configuration.hpp"
-#include "gestures.hpp"
-#include "action.hpp"
-#include "shapes.hpp"
-
-int mainloop()
-{
-	return 1;
-}
-
-
-#ifdef PC
-// #### From here  we want to run the source locally on a PC
-int main( void )
-{
-	while( mainloop() ); // run our mainloop until it lets us know, it is finished
-	return 0;
-}
-
-#else
-// #### From here we are in a local module, running on NAO
-#include <iostream>
-#include <boost/shared_ptr.hpp>
-
-#include <alcommon/almodule.h>
-#include <alcommon/albroker.h>
-
-using namespace AL;
-
 /**
- *
- * This class inherits AL::ALModule. This allows it to bind methods
- * and be run as a remote executable or as a plugin within NAOqi
- */
-class Prog : public AL::ALModule
-{
-	public:
-		Prog(boost::shared_ptr<AL::ALBroker> pBroker, const std::string& pName);
+* @author Peter Schrott
+*/
 
-		virtual ~Prog();
+#include <signal.h>
+#include <boost/shared_ptr.hpp>
+#include <alcommon/albroker.h>
+#include <alcommon/almodule.h>
+#include <alcommon/albrokermanager.h>
+#include <alcommon/altoolsmain.h>
 
-		/** Overloading ALModule::init().
-		* This is called right after the module has been loaded
-		*/
-		virtual void init();
-};
-Prog::Prog(boost::shared_ptr<ALBroker> broker, const std::string& name):
-  ALModule(broker, name)
-{
-	/** Describe the module here. This will appear on the webpage*/
-	setModuleDescription("Prog");
-}
+#include "NaoGestureRecognition.h"
 
-Prog::~Prog() 
-{
-	/** Destructor */
-}
-
-void Prog::init()
-{
-	/** Init is called just after construction.
-	*/
-
-	// TODO: do init stuff
-	
-	while( mainloop() ); // run our mainloop until it lets us know, it is finished
-}
-
+#ifdef NAO_GESTURERECOGNITION_IS_REMOTE
+# define ALCALL
+#else
+# ifdef _WIN32
+#  define ALCALL __declspec(dllexport)
+# else
+#  define ALCALL
+# endif
 #endif
+
+extern "C" {
+	ALCALL int _createModule(boost::shared_ptr<AL::ALBroker> pBroker) {
+		// init broker with the main broker instance
+		// from the parent executable
+		AL::ALBrokerManager::setInstance(pBroker->fBrokerManager.lock());
+		AL::ALBrokerManager::getInstance()->addBroker(pBroker);
+		
+		AL::ALModule::createModule<NaoGestureRecognition>(pBroker, "NaoGestureRecognition");
+
+		return 0;
+	}
+
+	ALCALL int _closeModule() {
+		return 0;
+	}
+}
+
+#ifdef NAO_GESTURERECOGNITION_IS_REMOTE
+int main(int argc, char *argv[]) {
+	// pointer to createModule
+	TMainType sig;
+	sig = &_createModule;
+
+	// call main
+	ALTools::mainFunction("NaoGestureRecognition",argc, argv,sig);
+}
+#endif
+

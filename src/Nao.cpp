@@ -4,7 +4,7 @@
 #include <alvision/alimage.h>
 
 // Our includes
-#include "../math/angles.h"
+#include "./math/angles.h"
 
 // constants for the led groups
 const string EYE_LEDS_BLUE = "eye_leds_blue";
